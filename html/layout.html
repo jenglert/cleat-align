@@ -1,0 +1,28 @@
+<html>
+<head>
+	<title>Test Output</title>
+</head>
+<body>
+
+	<h1>Cleat Alignment Test Output</h1>
+
+	<table>
+
+		<tr>
+			<th>Index</th>
+			<th>Name</th>
+			<th>Foot</th>
+			<th>Original</th>
+		</tr>
+		#foreach ($row in $rows)
+			<tr style="margin-bottom: 5px">
+				<td>$row.index</td>
+				<td>$row.name</td>
+				<td>$row.foot</td>
+				<td><img height="100px" src="$row.original_file_name" /></td>
+			</tr>
+		#end
+	</table>
+
+</body>
+</html>
