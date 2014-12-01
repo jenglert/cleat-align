@@ -1,7 +1,9 @@
+import os
 from os import listdir
 from os.path import isfile, join
 import re
 from airspeed import CachingFileLoader
+from SimpleCV import Image
 
 def load_cache(contents):
 	loader = CachingFileLoader("html")
@@ -14,6 +16,7 @@ class SampleImage:
 		self.index = index
 		self.name = name
 		self.foot = foot
+		self.step_outputs = []
 
 def convert_filename_to_sample_image(file_name):
 	sample_regex = re.compile('(\d+)-(.*)-([LR]).[jJ][pP][gG]', re.IGNORECASE)
@@ -33,9 +36,29 @@ def write_file(file_path, contents):
 	f.write(contents)
 	f.close()
 
-for x in sample_images():
-	print x
+def correct_alignment(si, step_number):
+	cwd = os.getcwd()
+	new_file_path = cwd + "/corrected/" + si.index + "-" + si.name + "-" + si.foot + "-Step" + str(step_number) + ".jpg"
+	img = Image(si.original_file_name) 
+	if (img.width > img.height):
+		img.rotate(-90, fixed=False).save(new_file_path)
+	else:
+		img.save(new_file_path)
+	return new_file_path
 
-write_file("output.html", load_cache({"rows": sample_images()}) )
+# Make the 'corrected' file path
+if not os.path.exists("corrected"):
+  os.makedirs("corrected")
+
+sis = sample_images()
+
+steps = [ correct_alignment ]
+
+for si in sis:
+	for counter, step in enumerate(steps):
+		step_output = step(si, counter + 1)
+		si.step_outputs.append(str(step_output))
+
+write_file("output.html", load_cache({"rows": sorted(sis, key=lambda si: str(si.index) + si.foot)}) )
 
 print "Done!"
