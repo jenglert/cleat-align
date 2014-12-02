@@ -12,7 +12,6 @@
 			<th>Index</th>
 			<th>Name</th>
 			<th>Foot</th>
-			<th>Original</th>
 			<th>Steps</th>
 		</tr>
 		#foreach ($row in $rows)
@@ -20,9 +19,8 @@
 				<td>$row.index</td>
 				<td>$row.name</td>
 				<td>$row.foot</td>
-				<td><img height="100px" src="$row.original_file_name" /></td>
 				#foreach ($step_image in $row.step_outputs)
-				  <td><img height="100px" src="$step_image" /></td>
+				  <td><a href="$step_image" target="_blank"><img height="300px" src="$step_image" /></a></td>
 				#end
 			</tr>
 		#end
