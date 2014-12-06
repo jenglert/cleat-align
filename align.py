@@ -5,6 +5,7 @@ import re
 from airspeed import CachingFileLoader
 from SimpleCV import Image
 import shutil
+from SimpleCV import Color
 
 def load_cache(contents):
 	loader = CachingFileLoader("html")
@@ -50,7 +51,7 @@ def scale_down(si, step_number):
 
 def correct_alignment(si, step_number):
 	new_file_path = step_file_path(si, step_number)
-	img = Image(si.original_file_name) 	
+	img = Image(si.original_file_name)
 	if (img.width > img.height):
 		img.rotate(-90, fixed=False).save(new_file_path)
 	else:
@@ -73,7 +74,7 @@ def find_circles(si, step_number):
 	if (fs != None):
 		fs.draw()
 	img.save(new_file_path)
-	return new_file_path	
+	return new_file_path
 
 def find_blobs(si, step_number):
 	new_file_path = step_file_path(si, step_number)
@@ -84,16 +85,18 @@ def find_blobs(si, step_number):
 	img.save(new_file_path)
 	return new_file_path
 
-# Strategy is to find blobs that have an edge on the perimeter of the image.  Remove 
+# Strategy is to find blobs that have an edge on the perimeter of the image.  Remove
 # these blobs from the image.  The blobs also need to be at least 2% of the image.
 def find_and_remove_bottom_blobs(si, step_number):
 	new_file_path = step_file_path(si, step_number)
 	img = Image(si.step_outputs[len(si.step_outputs) - 1])
 	for blob in img.findBlobs():
+
 		if (blob.area() / img.area() > 0.02):
+
 			edge_rect = [ point for point in blob.minRect() if point[0] < 10 or point[0] > img.width - 10 or point[1] < 10 or point[1] > img.height - 10]
 			if (len(edge_rect) >= 2):
-				blob.draw()
+				blob.draw(Color.GREEN)
 	img.save(new_file_path)
 	return new_file_path
 
@@ -101,16 +104,23 @@ def dilate_and_erode(si, step_number):
 	new_file_path = step_file_path(si, step_number)
 	img = Image(si.step_outputs[len(si.step_outputs) - 1])
 	img.erode(1).save(new_file_path)
-	return new_file_path	
+	return new_file_path
+
+def color_distance_to_metal(si, step_number):
+	new_file_path = step_file_path(si, step_number)
+	img = Image(si.step_outputs[len(si.step_outputs) - 1])
+	img.colorDistance((240, 227, 208)).binarize(30).save(new_file_path)
+	return new_file_path
 
 # Make the 'corrected' file path
-shutil.rmtree('corrected')
+if os.path.isdir("corrected"):
+  shutil.rmtree('corrected')
 if not os.path.exists("corrected"):
   os.makedirs("corrected")
 
 sis = sample_images()
 
-steps = [ correct_alignment, scale_down, dilate_and_erode, find_and_remove_bottom_blobs, find_corners ]
+steps = [ correct_alignment, scale_down, dilate_and_erode, find_blobs ] #find_and_remove_bottom_blobs, find_corners, color_distance_to_metal ]
 
 for si in sis:
 	for counter, step in enumerate(steps):
