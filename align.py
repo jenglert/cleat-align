@@ -6,6 +6,10 @@ from airspeed import CachingFileLoader
 from SimpleCV import Image
 import shutil
 from SimpleCV import Color
+from report import ShoeMeasurements
+import itertools
+
+# Green pixel dot: RGB: 216, 255, 192 HSV: 95, 28, 100
 
 def load_cache(contents):
 	loader = CachingFileLoader("html")
@@ -106,10 +110,22 @@ def dilate_and_erode(si, step_number):
 	img.erode(1).save(new_file_path)
 	return new_file_path
 
-def color_distance_to_metal(si, step_number):
+def dot_blobs(si, step_number):
 	new_file_path = step_file_path(si, step_number)
 	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	img.colorDistance((240, 227, 208)).binarize(30).save(new_file_path)
+	new_img = img.colorDistance((160, 255, 160)).invert().binarize((200, 200, 200)).invert().erode(1)
+	dots = sorted(new_img.findBlobs()[-5:], key=lambda blob: blob.centroid()[1])
+	for blob in dots:
+		blob.draw()
+		new_img.dl().circle(blob.centroid(), 5, Color.RED)
+
+	centroids = map(lambda blob: blob.centroid(), dots)
+
+	bottom_screws = sorted(centroids[2:4], key=lambda centroid: centroid[0])
+
+	shoe_measurements = ShoeMeasurements(si.foot, centroids[0], centroids[1], bottom_screws[0], bottom_screws[1], centroids[4])
+	new_img = shoe_measurements.draw_on_img(new_img)
+	new_img.save(new_file_path)
 	return new_file_path
 
 # Make the 'corrected' file path
@@ -118,15 +134,18 @@ if os.path.isdir("corrected"):
 if not os.path.exists("corrected"):
   os.makedirs("corrected")
 
-sis = sample_images()
+for name, sis in itertools.groupby(sample_images(), key=lambda si: si.name):
+	print name
+	print len(list(sis))
 
-steps = [ correct_alignment, scale_down, dilate_and_erode, find_blobs ] #find_and_remove_bottom_blobs, find_corners, color_distance_to_metal ]
 
-for si in sis:
-	for counter, step in enumerate(steps):
-		step_output = step(si, counter + 1)
-		si.step_outputs.append(str(step_output))
+# steps = [ correct_alignment, scale_down, dot_blobs]
 
-write_file("output.html", load_cache({"rows": sorted(sis, key=lambda si: str(si.index) + si.foot)}) )
+# for si in sis:
+# 	for counter, step in enumerate(steps):
+# 		step_output = step(si, counter + 1)
+# 		si.step_outputs.append(str(step_output))
 
-print "Done!"
+# write_file("output.html", load_cache({"rows": sorted(sis, key=lambda si: str(si.index) + si.foot)}) )
+
+# print "Done!"

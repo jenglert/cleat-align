@@ -69,11 +69,11 @@ class ShoeMeasurements:
 
 		img.dl().line(self.left_screw, self.top_screw, Color.RED)
 		ltmidpoint = middle_of_points(self.left_screw, self.top_screw)
-		img.dl().text("{:.0f}".format(distance_between_points(self.left_screw, self.top_screw)), ltmidpoint)
+		img.dl().text("{:.0f}".format(distance_between_points(self.left_screw, self.top_screw)), ltmidpoint, Color.WHITE)
 
 		img.dl().line(self.left_screw, self.top_screw, Color.RED)
-		rtmidpoint = middle_of_points(self.left_screw, self.top_screw)
-		img.dl().text("{:.0f}".format(distance_between_points(self.right_screw, self.top_screw)), trmidpoint)
+		rtmidpoint = middle_of_points(self.right_screw, self.top_screw)
+		img.dl().text("{:.0f}".format(distance_between_points(self.right_screw, self.top_screw)), rtmidpoint, Color.WHITE)
 
 		img.dl().line(self.top_screw, middle_of_points(self.left_screw, self.right_screw), Color.RED)
 		return img
@@ -141,36 +141,36 @@ def left_to_right_report(left, right):
 	# Return in pixels for now....
 	return LeftToRightReport(left.rotation - right.rotation, left.width_placement - right.width_placement, left.length_placement - right.length_placement)
 
-lsm = ShoeMeasurements("L", (263, 93), (273, 202), (201, 307), (344, 305), (261, 877))
-rsm = ShoeMeasurements("R", (292, 103), (275, 241), (196, 346), (344, 355), (260, 907))
+# lsm = ShoeMeasurements("L", (263, 93), (273, 202), (201, 307), (344, 305), (261, 877))
+# rsm = ShoeMeasurements("R", (292, 103), (275, 241), (196, 346), (344, 355), (260, 907))
 
-print "left cleat area: " + str(lsm.cleat_area())
-print "right cleat area: " + str(rsm.cleat_area())
-print "  diff: {:.2%}".format((lsm.cleat_area() - rsm.cleat_area()) / lsm.cleat_area())
+# print "left cleat area: " + str(lsm.cleat_area())
+# print "right cleat area: " + str(rsm.cleat_area())
+# print "  diff: {:.2%}".format((lsm.cleat_area() - rsm.cleat_area()) / lsm.cleat_area())
 
-print "left shoe length: " + str(lsm.shoe_length())
-print "right shoe length: " + str(rsm.shoe_length())
-print "  diff: {:.2%}".format((lsm.shoe_length() - rsm.shoe_length()) / lsm.shoe_length())
+# print "left shoe length: " + str(lsm.shoe_length())
+# print "right shoe length: " + str(rsm.shoe_length())
+# print "  diff: {:.2%}".format((lsm.shoe_length() - rsm.shoe_length()) / lsm.shoe_length())
 
-lcr = cleat_report(lsm)
-lcr.pretty_print()
-rcr = cleat_report(rsm)
-rcr.pretty_print()
+# lcr = cleat_report(lsm)
+# lcr.pretty_print()
+# rcr = cleat_report(rsm)
+# rcr.pretty_print()
 
-limg = Image("corrected/1-winter-sidi-L-Step2.jpg")
-limg.drawText("Left")
-rimg = Image("corrected/1-winter-sidi-R-Step2.jpg")
-rimg.drawText("Right")
+# limg = Image("corrected/1-winter-sidi-L-Step2.jpg")
+# limg.drawText("Left")
+# rimg = Image("corrected/1-winter-sidi-R-Step2.jpg")
+# rimg.drawText("Right")
 
-limg = lsm.draw_on_img(limg)
-rimg = rsm.draw_on_img(rimg)
+# limg = lsm.draw_on_img(limg)
+# rimg = rsm.draw_on_img(rimg)
 
-l = limg.applyLayers()
-r = rimg.applyLayers()
+# l = limg.applyLayers()
+# r = rimg.applyLayers()
 
-r.sideBySide(l).save("sbys.jpg")
+# r.sideBySide(l).save("sbys.jpg")
 
-left_to_right_report(lcr, rcr).pretty_print()
+# left_to_right_report(lcr, rcr).pretty_print()
 
 
 
