@@ -6,22 +6,50 @@
 
 	<h1>Cleat Alignment Test Output</h1>
 
-	<table>
+	<table border=1>
 
 		<tr>
 			<th>Index</th>
 			<th>Name</th>
 			<th>Foot</th>
+			<th>Area</th>
+			<th>Shoe Angle</th>
+			<th>Shoe Length</th>
+			<th>Cleat Width</th>
 			<th>Steps</th>
+			<th>Report</th>
 		</tr>
-		#foreach ($row in $rows)
+		#foreach ($pair_report in $vm.pair_reports)
 			<tr style="margin-bottom: 5px">
-				<td>$row.index</td>
-				<td>$row.name</td>
-				<td>$row.foot</td>
-				#foreach ($step_image in $row.step_outputs)
-				  <td><a href="$step_image" target="_blank"><img height="300px" src="$step_image" /></a></td>
-				#end
+				<td rowspan=2>$pair_report.index</td>
+				<td rowspan=2>$pair_report.name</td>
+				<td>Left</td>
+				<td>$pair_report.left.area</td>
+				<td>$pair_report.left.shoe_angle</td>
+				<td>$pair_report.left.shoe_length</td>
+				<td>$pair_report.left.cleat_width</td>
+				<td>
+					#foreach ($img in $pair_report.left.images)
+						<a href="$img" target="_blank">
+							<img height="350px" src="$img" />
+						</a>
+					#end
+				</td>
+				<td rowspan=2>$pair_report.report</td>
+			</tr>
+			<tr>
+				<td>Right</td>
+				<td>$pair_report.right.area</td>
+				<td>$pair_report.right.shoe_angle</td>
+				<td>$pair_report.right.shoe_length</td>
+				<td>$pair_report.right.cleat_width</td>
+				<td>
+					#foreach ($img in $pair_report.right.images)
+						<a href="$img" target="_blank">
+						 	<img height="350px" src="$img" />
+						 </a>
+					#end
+				</td>
 			</tr>
 		#end
 	</table>

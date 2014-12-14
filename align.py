@@ -2,19 +2,14 @@ import os
 from os import listdir
 from os.path import isfile, join
 import re
-from airspeed import CachingFileLoader
 from SimpleCV import Image
 import shutil
 from SimpleCV import Color
-from report import ShoeMeasurements
+from report import ShoeMeasurements, left_to_right_report, cleat_report
 import itertools
+from output import make_shoe_report_view_model
 
 # Green pixel dot: RGB: 216, 255, 192 HSV: 95, 28, 100
-
-def load_cache(contents):
-	loader = CachingFileLoader("html")
-	template = loader.load_template("layout.html")
-	return template.merge(contents, loader=loader)
 
 class SampleImage:
 	def __init__(self, original_file_name, index, name, foot):
@@ -37,82 +32,30 @@ def sample_images():
 
 	return filter(None, map(convert_filename_to_sample_image, sample_images))
 
-def write_file(file_path, contents):
-	f = open(file_path, "w")
-	f.write(contents)
-	f.close()
-
-def step_file_path(si, step_number):
+def step_file_path(si, step):
 	cwd = os.getcwd()
-	return cwd + "/corrected/" + si.index + "-" + si.name + "-" + si.foot + "-Step" + str(step_number) + ".jpg"
+	return cwd + "/corrected/" + si.index + "-" + si.name + "-" + si.foot + "-" + str(step) + ".jpg"
 
-def scale_down(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
+def scale_down(si, image_path):
+	new_file_path = step_file_path(si, 'scale-down')
+	img = Image(image_path)
 	img = img.resize(h=1024)
 	img.save(new_file_path)
 	return new_file_path
 
-def correct_alignment(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.original_file_name)
+def correct_alignment(si, image_path):
+	new_file_path = step_file_path(si, 'correct-alignment')
+	img = Image(image_path)
 	if (img.width > img.height):
 		img.rotate(-90, fixed=False).save(new_file_path)
 	else:
 		img.save(new_file_path)
+	si.step_outputs.append(new_file_path)
 	return new_file_path
 
-def find_corners(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	fs = img.findCorners()
-	if (fs != None):
-		fs.draw()
-	img.save(new_file_path)
-	return new_file_path
-
-def find_circles(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	fs = img.findCircle()
-	if (fs != None):
-		fs.draw()
-	img.save(new_file_path)
-	return new_file_path
-
-def find_blobs(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	fs = img.findBlobs()
-	if (fs != None):
-		fs.draw()
-	img.save(new_file_path)
-	return new_file_path
-
-# Strategy is to find blobs that have an edge on the perimeter of the image.  Remove
-# these blobs from the image.  The blobs also need to be at least 2% of the image.
-def find_and_remove_bottom_blobs(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	for blob in img.findBlobs():
-
-		if (blob.area() / img.area() > 0.02):
-
-			edge_rect = [ point for point in blob.minRect() if point[0] < 10 or point[0] > img.width - 10 or point[1] < 10 or point[1] > img.height - 10]
-			if (len(edge_rect) >= 2):
-				blob.draw(Color.GREEN)
-	img.save(new_file_path)
-	return new_file_path
-
-def dilate_and_erode(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
-	img.erode(1).save(new_file_path)
-	return new_file_path
-
-def dot_blobs(si, step_number):
-	new_file_path = step_file_path(si, step_number)
-	img = Image(si.step_outputs[len(si.step_outputs) - 1])
+def dot_blobs(si, image_path):
+	new_file_path = step_file_path(si, 'dot-blobs')
+	img = Image(image_path)
 	new_img = img.colorDistance((160, 255, 160)).invert().binarize((200, 200, 200)).invert().erode(1)
 	dots = sorted(new_img.findBlobs()[-5:], key=lambda blob: blob.centroid()[1])
 	for blob in dots:
@@ -126,7 +69,34 @@ def dot_blobs(si, step_number):
 	shoe_measurements = ShoeMeasurements(si.foot, centroids[0], centroids[1], bottom_screws[0], bottom_screws[1], centroids[4])
 	new_img = shoe_measurements.draw_on_img(new_img)
 	new_img.save(new_file_path)
+	si.step_outputs.append(new_file_path)
+	return (new_file_path, shoe_measurements)
+
+def rotate_and_resize(si, left_sm, right_sm):
+	new_file_path = step_file_path(si, 'rotate')
+	img = Image(si.step_outputs[-1:][0])
+	rot = right_sm.toe_heel_angle() + left_sm.toe_heel_angle()
+	img = img.rotate(rot, fixed=True)
+	si.step_outputs.append(new_file_path)
+	img.save(new_file_path)
+
+	scale = left_sm.shoe_length() / right_sm.shoe_length()
+
+	new_file_path = step_file_path(si, 'scale-length')
+	img = img.scale(scale)
+	si.step_outputs.append(new_file_path)
+	img.save(new_file_path)
+
+	# We also resize the original file
+	orig_img = Image(si.step_outputs[0])
+	orig_img = orig_img.rotate(rot, fixed=True)
+	orig_img = orig_img.scale(scale)
+
+	new_file_path = step_file_path(si, 'transformed-original')
+	si.step_outputs.append(new_file_path)
+	orig_img.save(new_file_path)
 	return new_file_path
+
 
 # Make the 'corrected' file path
 if os.path.isdir("corrected"):
@@ -134,18 +104,51 @@ if os.path.isdir("corrected"):
 if not os.path.exists("corrected"):
   os.makedirs("corrected")
 
-for name, sis in itertools.groupby(sample_images(), key=lambda si: si.name):
-	print name
-	print len(list(sis))
+# Returns the shoe measurements for each image.
+def process_image(si):
+	scaled = scale_down(si, si.original_file_name)
+	oriented = correct_alignment(si, scaled)
+	dot_blobs_fp, sm = dot_blobs(si, oriented)
+	return (si, sm)
 
 
-# steps = [ correct_alignment, scale_down, dot_blobs]
+sis = sample_images()
 
-# for si in sis:
-# 	for counter, step in enumerate(steps):
-# 		step_output = step(si, counter + 1)
-# 		si.step_outputs.append(str(step_output))
+print "Loaded " + str(len(sis)) + " sample images"
 
-# write_file("output.html", load_cache({"rows": sorted(sis, key=lambda si: str(si.index) + si.foot)}) )
+for name, si_group in itertools.groupby(sis, key=lambda si: si.name):
+	si_list = list(si_group)
+	index = si_list[1].index
+	print "Processing " + str(index) + "-" + name + " with items " + str(len(si_list))
+	images = map(lambda si: process_image(si), si_list)
+	left_si, left_sm = filter(lambda si: si[0].foot == 'L', images)[0]
+	right_si, right_sm = filter(lambda si: si[0].foot == 'R', images)[0]
 
-# print "Done!"
+	# Rotate & resize
+	transformed_fp = rotate_and_resize(right_si, left_sm, right_sm)
+
+	right_blob_fp, right_sm = dot_blobs(right_si, transformed_fp)
+
+	rimg = Image(transformed_fp)
+	right_sm.draw_on_img(rimg)
+	new_file_path = step_file_path(right_si, 'with-lines')
+	right_si.step_outputs.append(new_file_path)
+	rimg.save(new_file_path)
+
+	limg = Image(left_si.step_outputs[0])
+	left_sm.draw_on_img(limg)
+	new_file_path = step_file_path(left_si, 'with-lines')
+	left_si.step_outputs.append(new_file_path)
+	limg.save(new_file_path)
+
+
+	lr_report = left_to_right_report(cleat_report(left_sm), cleat_report(right_sm))
+
+	vm = make_shoe_report_view_model(index, name, left_si.step_outputs, right_si.step_outputs, left_sm, right_sm, lr_report)
+	vm.write_file("output.html")
+
+print "Done!"
+
+
+
+
