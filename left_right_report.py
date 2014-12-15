@@ -18,9 +18,9 @@ class LeftRightReport:
 		result = ""
 		result = result + "Cleat differences: \n"
 		if (self.rotation_difference > 0):
-			result = result + "   - Left cleat points towards the inside of the shoe by an extra " + str(self.rotation_difference) + " degrees.\n"
+			result = result + "   - Left cleat points towards the inside of the shoe by an extra " + str(abs(self.rotation_difference)) + " degrees.\n"
 		else:
-			result = result + "   - Right cleat points towards the inside of the shoe by an extra " + str(self.rotation_difference) + " degrees.\n"
+			result = result + "   - Right cleat points towards the inside of the shoe by an extra " + str(abs(self.rotation_difference)) + " degrees.\n"
 
 
 		if (self.width_placement_difference > 0):

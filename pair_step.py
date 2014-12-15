@@ -23,7 +23,7 @@ class PairStep:
 			scale = right_sm.shoe_length() / left_sm.shoe_length()
 			self.left_shoe.scale(self.left_shoe.last_img_path(), scale)
 
-	def report(self):
+	def report(self, report_file_name):
 		left_sm = self.left_shoe.make_shoe_measurements(self.left_shoe.last_img_path())
 		right_sm = self.right_shoe.make_shoe_measurements(self.right_shoe.last_img_path())
 
@@ -49,11 +49,13 @@ class PairStep:
 		right_img = right_img.embiggen((max_width, max_height))
 
 		side_by_side = left_img.sideBySide(right_img, scale=True)
-		side_by_side.save("side_by_side.jpg")
+		side_by_side.save(report_file_name)
 
 		print "Final comparison available at " + side_by_side.filename
 
-ps = PairStep("/web/cleat-align/sample-images/1-mavic-L.JPG", "/web/cleat-align/sample-images/1-mavic-R.JPG")
-ps.report()
+ps = PairStep("sample-images/2-mikewinter-L.JPG", "sample-images/2-mikewinter-R.JPG")
+ps.report("mikereport.jpg")
 
+# ps = PairStep("sample-images/3-lisatri-L.JPG", "sample-images/3-lisatri-R.JPG")
+# ps.report("lisareport.jpg")
 

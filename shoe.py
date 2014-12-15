@@ -1,3 +1,4 @@
+import time
 import re
 import os
 from shoe_measurements import ShoeMeasurements
@@ -65,7 +66,7 @@ class Shoe:
 	def dot_blobs(self, img_path):
 		new_file_path = self.nfn('dot-blobs')
 		img = Image(img_path)
-		new_img = img.colorDistance((160, 255, 160)).invert().binarize((200, 200, 200)).invert().erode(1)
+		new_img = img.hueDistance((160, 255, 160), minvalue=80).invert().binarize((230, 230, 230)).invert().erode(1)
 		dots = sorted(new_img.findBlobs()[-5:], key=lambda blob: blob.centroid()[1])
 		for blob in dots:
 			blob.draw()
@@ -83,6 +84,4 @@ class Shoe:
 	def nfn(self, desc):
 		return step_file_name(self.original_image_path, desc)
 
-
-shoel = Shoe("/web/cleat-align/sample-images/1-mavic-L.JPG", "L")
-shoer = Shoe("/web/cleat-align/sample-images/1-mavic-R.JPG", "R")
+# shoe = Shoe("sample-images/3-lisatri-R.JPG", "R")
