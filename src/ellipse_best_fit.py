@@ -15,6 +15,17 @@ class EllipseBestFit:
 		(width, height, rotation) = self.estimated_dimensions()
 		return math.pi * width * height
 
+	# The match area difference will be 0 if it is a perfect ellipse.  The number
+	# will never be one.  Realistically, pretty much any shape will not be 1.  For
+	# example, a triangle will be about 0.11.  The formula here attempts to normalize
+	# things well.
+	def chance_is_elipse(self):
+		result = 1 / (25 * match_area_difference(10))
+		if (result > 1):
+			return 1
+
+		return result
+
 	# Computes the difference in area (per slice) between the actual
 	# contour and the elipse formula we made to match the contour.
 	def match_area_difference(self, angle_step):

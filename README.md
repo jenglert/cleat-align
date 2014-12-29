@@ -1,4 +1,6 @@
 cleat-align
 ===========
 
-WIP: An application that helps align cleats on the bottom of cycling shoes.
+WIP: An application that helps align cleats on the bottom of cycling shoes
+
+BUILD: (https://travis-ci.org/jenglert/cleat-align.svg)

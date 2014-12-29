@@ -31,30 +31,9 @@ class DotBlobFinder:
 		new_img.save(new_file_path)
 		return (new_file_path, shoe_measurements)
 
-	def chance_blob_is_circular(self, blob):
-		mean = blob.radius()
-		stddev = self.radius_diff_std_dev(blob)
-		relt_std_dev = stddev / mean
+	def chance_blob_is_an_ellipse(self, blob):
+		ebf = ElipseBestFit(blob)
 
-		# print "mean: " + str(mean) + "\tstddev:" + str(stddev) + "\trltstddev:" + str(relt_std_dev) + "\tarea:" + str(blob.area()) + "\trect:" + str(rect.)
-
-	# Finds points around a circle (every 10 degrees) that intersect the blob's contour.
-	def points_around_elipse(self, blob):
-		True
-
-
-	# We know the average radius of each point in the blob.  This represents the standard deviation
-	# of the actual points compared to the average radius.
-	def radius_diff_std_dev(self, blob):
-		centroid = blob.centroid()
-		avg_radius = blob.radius()
-
-		diffs = map(lambda cp: pow(distance_between_points(cp, centroid) - avg_radius, 2), blob.contour())
-
-		return pow(sum(diffs) / len(diffs), 0.5)
-
-	def avg(self, list):
-		return sum(list) / float(len(list))
 
 	def nfn(self, desc):
 		return step_file_name(self.shoe.original_image_path, desc)

@@ -63,6 +63,11 @@ class EllipseBestFitTest(unittest.TestCase):
 		diff = ebf.match_area_difference(10)
 		self.assertTrue(abs(diff - 0.8367) < 0.001)
 
+	def test_match_area_difference_TRIANGLE(self):
+		ebf = EllipseBestFit((3, 2), [(3, 6), (6, 0), (0, 0)])
+		diff = ebf.match_area_difference(10)
+		self.assertTrue(abs(diff - 0.117) < 0.001)
+
 	def assert_points_close(self, a, b):
 		if (a == b): # Capture None case.
 			return True
