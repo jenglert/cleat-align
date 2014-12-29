@@ -1,10 +1,10 @@
-import time
 import re
 import os
 from shoe_measurements import ShoeMeasurements
 from SimpleCV import Image
 from SimpleCV import Color
 from filename_utils import *
+from dot_blob_finder import *
 
 class Shoe:
 	def __init__(self, original_image_path, left_or_right):
@@ -16,7 +16,7 @@ class Shoe:
 		# Basic transformations
 		corrected = self.correct_alignment(original_image_path)
 		scaled_down = self.scale_down(corrected)
-		blobs, shoe_measurements = self.dot_blobs(scaled_down)
+		blobs, shoe_measurements = DotBlobFinder(self, scaled_down).find()
 		rotated = self.rotate(scaled_down, shoe_measurements)
 
 		self.shoe_measurements = self.make_shoe_measurements(rotated)
@@ -26,7 +26,7 @@ class Shoe:
 		return self.transformations[-1:][0]
 
 	def make_shoe_measurements(self, img_path):
-		blobs, shoe_measurements = self.dot_blobs(img_path)
+		blobs, shoe_measurements = DotBlobFinder(self, img_path).find()
 
 		return shoe_measurements
 
@@ -63,25 +63,12 @@ class Shoe:
 		self.transformations.append(new_file_path)
 		return new_file_path
 
-	def dot_blobs(self, img_path):
-		new_file_path = self.nfn('dot-blobs')
-		img = Image(img_path)
-		new_img = img.hueDistance((160, 255, 160), minvalue=80).invert().binarize((230, 230, 230)).invert().erode(1)
-		dots = sorted(new_img.findBlobs()[-5:], key=lambda blob: blob.centroid()[1])
-		for blob in dots:
-			blob.draw()
-			new_img.dl().circle(blob.centroid(), 5, Color.RED)
-
-		centroids = map(lambda blob: blob.centroid(), dots)
-
-		bottom_screws = sorted(centroids[2:4], key=lambda centroid: centroid[0])
-
-		shoe_measurements = ShoeMeasurements(self.left_or_right, centroids[0], centroids[1], bottom_screws[0], bottom_screws[1], centroids[4])
-		new_img = shoe_measurements.draw_on_img(new_img)
-		new_img.save(new_file_path)
-		return (new_file_path, shoe_measurements)
-
 	def nfn(self, desc):
 		return step_file_name(self.original_image_path, desc)
 
-# shoe = Shoe("sample-images/3-lisatri-R.JPG", "R")
+# print "Right"
+# shoel = Shoe("/web/cleat-align/corrected/1-mavic-L-rotated.jpg", "L")
+# print shoel.shoe_measurements.centered_coordinates().pretty_print()
+# print "Left"
+# shoer = Shoe("/web/cleat-align/corrected/1-mavic-R-resized.jpg", "R")
+# print shoer.shoe_measurements.centered_coordinates().pretty_print()

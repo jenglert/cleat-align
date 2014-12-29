@@ -27,6 +27,9 @@ class PairStep:
 		left_sm = self.left_shoe.make_shoe_measurements(self.left_shoe.last_img_path())
 		right_sm = self.right_shoe.make_shoe_measurements(self.right_shoe.last_img_path())
 
+		left_sm.centered_coordinates().pretty_print()
+		right_sm.centered_coordinates().pretty_print()
+
 		lr_report = LeftRightReport(left_sm, right_sm)
 		lr_report.pretty_print()
 
