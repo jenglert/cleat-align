@@ -4,9 +4,6 @@ from math import cos, sin
 
 class EllipseBestFit:
 
-	def __init__(self, blob):
-		__init__(blob.centroid(), blob.contour())
-
 	def __init__(self, centroid, contour_points):
 		self.centroid = centroid
 		self.contour_points = contour_points
@@ -20,11 +17,15 @@ class EllipseBestFit:
 	# example, a triangle will be about 0.11.  The formula here attempts to normalize
 	# things well.
 	def chance_is_elipse(self):
-		result = 1 / (25 * match_area_difference(10))
-		if (result > 1):
-			return 1
-
-		return result
+		area_diff = self.match_area_difference(10)
+		if (area_diff < 0.1):
+			return 0.9 + (0.1 - area_diff)
+		if (area_diff < 0.2):
+			return 0.8 + ((0.2 - area_diff) / 0.2) * 0.1
+		if (area_diff < 0.3):
+			return 0.7 + ((0.3 - area_diff) / 0.3) * 0.1
+		else:
+			return 0.
 
 	# Computes the difference in area (per slice) between the actual
 	# contour and the elipse formula we made to match the contour.
@@ -118,6 +119,8 @@ class EllipseBestFit:
 			intersections = filter(lambda segment: segment != None, intersections)
 
 			if (len(intersections) == 0):
+				for segment in self.segments():
+					print "S:" + str(segment)
 				raise Exception("Unable to find intersection from " + str(self.centroid) + " at angle " + str(ang))
 
 			consistent_contour.append(average_of_points(intersections))

@@ -66,9 +66,9 @@ class Shoe:
 	def nfn(self, desc):
 		return step_file_name(self.original_image_path, desc)
 
-# print "Right"
-# shoel = Shoe("/web/cleat-align/corrected/1-mavic-L-rotated.jpg", "L")
-# print shoel.shoe_measurements.centered_coordinates().pretty_print()
-# print "Left"
-# shoer = Shoe("/web/cleat-align/corrected/1-mavic-R-resized.jpg", "R")
-# print shoer.shoe_measurements.centered_coordinates().pretty_print()
+print "Right"
+shoel = Shoe("/web/cleat-align/corrected/1-mavic-L-rotated.jpg", "L")
+print shoel.shoe_measurements.centered_coordinates().pretty_print()
+print "Left"
+shoer = Shoe("/web/cleat-align/corrected/1-mavic-R-resized.jpg", "R")
+print shoer.shoe_measurements.centered_coordinates().pretty_print()

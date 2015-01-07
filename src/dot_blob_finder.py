@@ -3,6 +3,7 @@ from SimpleCV import Image
 from SimpleCV import Color
 from point_util import *
 from shoe_measurements import ShoeMeasurements
+from ellipse_best_fit import *
 
 class DotBlobFinder:
 
@@ -15,7 +16,7 @@ class DotBlobFinder:
 		img = Image(self.img_path)
 		new_img = img.colorDistance((160, 255, 160)).invert().binarize((200, 200, 200)).invert().erode(1)
 		for blob in new_img.findBlobs():
-			self.chance_blob_is_circular(blob)
+			print str(blob) + " --> " + str(self.chance_blob_is_an_ellipse(blob))
 
 		dots = sorted(new_img.findBlobs()[-5:], key=lambda blob: blob.centroid()[1])
 		for blob in dots:
@@ -32,7 +33,12 @@ class DotBlobFinder:
 		return (new_file_path, shoe_measurements)
 
 	def chance_blob_is_an_ellipse(self, blob):
-		ebf = ElipseBestFit(blob)
+		# Skip blobs that do not have their centroid within the blob.
+		if (blob.distanceFrom(blob.centroid()) > 0.):
+			return 0.
+
+		ebf = EllipseBestFit(blob.centroid(), blob.contour())
+		return ebf.chance_is_elipse()
 
 
 	def nfn(self, desc):
