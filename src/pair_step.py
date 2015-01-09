@@ -56,8 +56,8 @@ class PairStep:
 
 		print "Final comparison available at " + side_by_side.filename
 
-ps = PairStep("sample-images/2-mikewinter-L.JPG", "sample-images/2-mikewinter-R.JPG")
-ps.report("mikereport.jpg")
+ps = PairStep("sample-images/1-mavic-L.JPG", "sample-images/1-mavic-R.JPG")
+ps.report("mavicreport.jpg")
 
 # ps = PairStep("sample-images/3-lisatri-L.JPG", "sample-images/3-lisatri-R.JPG")
 # ps.report("lisareport.jpg")

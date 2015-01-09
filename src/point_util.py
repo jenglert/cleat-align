@@ -41,6 +41,8 @@ def intersection_of_line_and_segment(line1, line2, segment1, segment2):
 	yok = int_of_lines[1] >= min(segment1[1], segment2[1]) and \
 	      int_of_lines[1] <= max(segment1[1], segment2[1])
 
+	print "int: " + str(line1) + "\t2:" + str(line2) + "\txok: " + str(xok) + "\tyok: " + str(yok)
+
 	if (not xok or not yok):
 		return None
 	return int_of_lines
@@ -117,6 +119,16 @@ def average_of_points(arr):
 
 	return (sumx / len(arr), sumy / len(arr))
 
+# Converts a list of points into a list of lines, matching adjacent
+# points to form a line.
+def pointsToLines(points):
+	segments = []
+	for idx, c in enumerate(points):
+		if (idx + 1 < len(points)):
+			segments.append((c, points[idx + 1]))
+		else:
+			segments.append((c, points[0]))
 
+	return segments
 
 

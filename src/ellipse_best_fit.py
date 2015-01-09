@@ -1,23 +1,38 @@
 from point_util import *
 import numpy as np
 from math import cos, sin
+import time
+from SimpleCV import Color
+from memoized import memoized
+import traceback
 
 class EllipseBestFit:
 
-	def __init__(self, centroid, contour_points):
+	def __init__(self, centroid, contour_points, angle_step=10):
+		self.angle_step = angle_step
 		self.centroid = centroid
 		self.contour_points = contour_points
+		self.segments = pointsToLines(contour_points)
+		self.consistent_contour = self.consistent_contour()
 
-	def area(self):
+	def area(self):	
 		(width, height, rotation) = self.estimated_dimensions()
 		return math.pi * width * height
+
+	def show_best_fit_model(self, img):
+		# img.drawPoints(self.contour_points)
+		for l in self.segments:
+			img.drawLine(l[0], l[1], color = Color.RED)
+		img.drawPoints(self.parametric_equation_points(10), color= Color.GREEN)
+		img.show()
+		time.sleep(1)
 
 	# The match area difference will be 0 if it is a perfect ellipse.  The number
 	# will never be one.  Realistically, pretty much any shape will not be 1.  For
 	# example, a triangle will be about 0.11.  The formula here attempts to normalize
 	# things well.
 	def chance_is_elipse(self):
-		area_diff = self.match_area_difference(10)
+		area_diff = self.match_area_difference()
 		if (area_diff < 0.1):
 			return 0.9 + (0.1 - area_diff)
 		if (area_diff < 0.2):
@@ -29,12 +44,12 @@ class EllipseBestFit:
 
 	# Computes the difference in area (per slice) between the actual
 	# contour and the elipse formula we made to match the contour.
-	def match_area_difference(self, angle_step):
-		contour_points = self.consistent_contour(angle_step)
-		ellipse_points = self.parametric_equation_points(angle_step)
-		section_cnt = 360 / angle_step
+	def match_area_difference(self):
+		contour_points = self.consistent_contour
+		ellipse_points = self.parametric_equation_points()
+		section_cnt = 360 / self.angle_step
 
-		drop_distance = 0.
+		drop_distance = 0
 
 		for i in range(0, 36):
 			# The effective area between the ellipse formula and the contour
@@ -50,7 +65,7 @@ class EllipseBestFit:
 
 		return drop_distance / self.area()
 
-	def parametric_equation_points(self, angle_step):
+	def parametric_equation_points(self):
 		points = []
 
 		(width, height, rotation) = self.estimated_dimensions()
@@ -76,8 +91,7 @@ class EllipseBestFit:
 	def estimated_dimensions(self):
 		# This should ensure that we have a number of points in the consistent
 		# contour that is divisible by 4.
-		angle_step = 10
-		cc = self.consistent_contour(angle_step)
+		cc = self.consistent_contour
 
 		biggest_contour_distance = -1
 		biggest_contour_index = -1
@@ -95,7 +109,7 @@ class EllipseBestFit:
 				biggest_contour_index = i
 
 
-		angle = angle_step * biggest_contour_index
+		angle = self.angle_step * biggest_contour_index
 		width = biggest_contour_distance
 		h_point_a, h_point_b = (cc[biggest_contour_index + quarter_cc_len], \
 			                    cc[(biggest_contour_index + half_cc_len + quarter_cc_len) % cc_len])
@@ -110,30 +124,25 @@ class EllipseBestFit:
 	#
 	# In the event the ray intersects the contour multiple times, record
 	# the average
-	def consistent_contour(self, angle_step):
+	@memoized
+	def consistent_contour(self):
 		consistent_contour = []
-		for ang in range(0, 360, angle_step):
+		for s in self.segments:
+			print "s: " + str(s)
+		print "center: " + str(self.centroid)
+		for ang in range(0, 360, self.angle_step):
 			intersections = map(lambda segment: intersection_of_ray_and_segment(self.centroid, ang, segment[0], segment[1]), \
-				 self.segments())
+				 self.segments)
 
 			intersections = filter(lambda segment: segment != None, intersections)
 
-			if (len(intersections) == 0):
-				for segment in self.segments():
-					print "S:" + str(segment)
-				raise Exception("Unable to find intersection from " + str(self.centroid) + " at angle " + str(ang))
+			print "ang: " + str(ang) + "\t intersections: " + str(intersections) + "\tang: " + str(ang)
 
-			consistent_contour.append(average_of_points(intersections))
+			if (len(intersections) == 0):
+				# If there is not an intersection, the point probably falls on the other side of the centroid.  Just pick
+				# the middle for simplicity
+				consistent_contour.append(self.centroid)
+			else:
+			    consistent_contour.append(average_of_points(intersections))
 
 		return consistent_contour
-
-	# Iterate over every element in the contour as pairs of points.
-	def segments(self):
-		segments = []
-		for idx, c in enumerate(self.contour_points):
-			if (idx + 1 < len(self.contour_points)):
-				segments.append((c, self.contour_points[idx + 1]))
-			else:
-				segments.append((c, self.contour_points[0]))
-
-		return segments

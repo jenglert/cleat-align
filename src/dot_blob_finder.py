@@ -34,10 +34,12 @@ class DotBlobFinder:
 
 	def chance_blob_is_an_ellipse(self, blob):
 		# Skip blobs that do not have their centroid within the blob.
-		if (blob.distanceFrom(blob.centroid()) > 0.):
+		if (blob.distanceFrom(blob.centroid()) > blob.radius()):
 			return 0.
 
 		ebf = EllipseBestFit(blob.centroid(), blob.contour())
+		img = Image(self.img_path)
+		ebf.show_best_fit_model(img)
 		return ebf.chance_is_elipse()
 
 

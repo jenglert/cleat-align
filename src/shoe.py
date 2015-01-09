@@ -16,7 +16,7 @@ class Shoe:
 		# Basic transformations
 		corrected = self.correct_alignment(original_image_path)
 		scaled_down = self.scale_down(corrected)
-		blobs, shoe_measurements = DotBlobFinder(self, scaled_down).find()
+		_, shoe_measurements = DotBlobFinder(self, scaled_down).find()
 		rotated = self.rotate(scaled_down, shoe_measurements)
 
 		self.shoe_measurements = self.make_shoe_measurements(rotated)
@@ -26,7 +26,7 @@ class Shoe:
 		return self.transformations[-1:][0]
 
 	def make_shoe_measurements(self, img_path):
-		blobs, shoe_measurements = DotBlobFinder(self, img_path).find()
+		_, shoe_measurements = DotBlobFinder(self, img_path).find()
 
 		return shoe_measurements
 
@@ -69,6 +69,6 @@ class Shoe:
 print "Right"
 shoel = Shoe("/web/cleat-align/corrected/1-mavic-L-rotated.jpg", "L")
 print shoel.shoe_measurements.centered_coordinates().pretty_print()
-print "Left"
-shoer = Shoe("/web/cleat-align/corrected/1-mavic-R-resized.jpg", "R")
-print shoer.shoe_measurements.centered_coordinates().pretty_print()
+# print "Left"
+# shoer = Shoe("/web/cleat-align/corrected/1-mavic-R-resized.jpg", "R")
+# print shoer.shoe_measurements.centered_coordinates().pretty_print()
